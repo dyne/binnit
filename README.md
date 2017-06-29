@@ -15,8 +15,6 @@ can be enhanced.
 
 ### TODO
 
+* Check maximum paste length
 * Add a config file (hostname, port, pastedir)
 * Add a simple template system
-
-
-
