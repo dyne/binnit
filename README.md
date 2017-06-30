@@ -13,8 +13,17 @@ The unique ID of a paste is obtained from the SHA256 of the
 concatenation of title, time, and content. Rendering is minimal, but
 can be enhanced. 
 
+`binit` is currently configured through a simple key=value
+configuration file. The available options are:
+
+* host (the hostname to listen on)
+* port (the port to bind)
+* paste\_dir (the folder where pastes are kept)
+* templ\_dir (the folder where HTML files and templates are kept)
+* max_size (the maximum allowed length of a paste, in bytes. Larger
+    pastes will be trimmed to that length)
+
+
 ### TODO
 
-* Check maximum paste length
-* Add a config file (hostname, port, pastedir)
 * Add a simple template system

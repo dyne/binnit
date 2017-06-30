@@ -19,10 +19,20 @@ var p_conf = Config{
 	paste_dir: "./pastes",
 	templ_dir: "./tmpl",
 	log_fname: "./binit.log",
+	max_size: 4096,
 }
 
 
 
+func min (a, b int) int {
+
+	if a > b {
+		return b
+	} else {
+		return a
+	}
+
+}
 
 func handle_get_paste(w http.ResponseWriter, r *http.Request) {
 
@@ -70,6 +80,9 @@ func handle_put_paste(w http.ResponseWriter, r *http.Request) {
 		paste := req_body.Get("paste")
 		now := time.Now().String()
 		// format content
+
+		paste = paste[0:min(len(paste), int(p_conf.max_size))]
+		
 		content := fmt.Sprintf("# Title: %s\n# Pasted: %s\n------------\n%s", title, now, paste)
 
 		// ccompute the sha256 hash using title, body, and time
@@ -138,6 +151,7 @@ func main() {
 	log.Printf("  + listening on: %s:%s\n", p_conf.host, p_conf.port )
 	log.Printf("  + paste_dir: %s\n", p_conf.paste_dir)
 	log.Printf("  + templ_dir: %s\n", p_conf.templ_dir)
+	log.Printf("  + max_size: %d\n", p_conf.max_size)
 
 	
 	http.HandleFunc("/", req_handler)
