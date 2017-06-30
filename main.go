@@ -52,7 +52,15 @@ func handle_get_paste(w http.ResponseWriter, r *http.Request) {
 	} else {
 		// otherwise, if the requested paste exists, we serve it...
 		if _, err = os.Stat(paste_name); err == nil && orig_name != "./" {
-			http.ServeFile(w, r, paste_name)
+			//http.ServeFile(w, r, paste_name)
+			s, err := prepare_paste_page(&p_conf, orig_name)
+			if err == nil {
+				fmt.Fprintf(w, "%s", s)
+				return
+			} else {
+				fmt.Fprintf(w, "Error recovering paste '%s'\n", orig_name)
+				return
+			}
 		} else {
 			// otherwise, we give say we didn't find it
 			fmt.Fprintf(w, "Paste '%s' not found\n", orig_name)
@@ -142,6 +150,8 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Error opening logfile: %s. Exiting\n", p_conf.log_fname)
 		os.Exit(1)
 	}
+	defer f.Close()
+
 	
 	log.SetOutput(io.Writer(f))
 	log.SetPrefix("[binit]: ")
