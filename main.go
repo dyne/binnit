@@ -101,7 +101,7 @@ func handle_put_paste(w http.ResponseWriter, r *http.Request) {
 					// and then we return the URL:
 					log.Printf("  `-- saving paste to : %s", paste_dir + paste_name)
 					hostname := r.Host
-					if show := req_body.Get("show"); show != "" {
+					if show := req_body.Get("show"); show != "1" {
 						fmt.Fprintf(w, "%s/%s", hostname, paste_name)
 						return
 					} else{
