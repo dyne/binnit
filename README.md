@@ -29,4 +29,4 @@ through the option `-c <config\_file>`. The available options are:
 
 ### TODO
 
-* reorganise the code for paste storage/retrieve
+* provide a better standard template
