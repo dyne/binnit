@@ -1,3 +1,27 @@
+/*
+ *  This program is free software: you can redistribute it and/or
+ *  modify it under the terms of the GNU General Public License as
+ *  published by the Free Software Foundation, either version 3 of the
+ *  License, or (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see
+ *  <http://www.gnu.org/licenses/>.
+ *
+ *  (c) Vincenzo "KatolaZ" Nicosia 2017 -- <katolaz@freaknet.org>
+ * 
+ * 
+ *  This file is part of "binnit", a minimal no-fuss pastebin-like 
+ *  server written in golang
+ *
+ */
+
+
 package main
 
 import (
@@ -19,7 +43,7 @@ var p_conf = Config{
 	bind_port: "8000",
 	paste_dir: "./pastes",
 	templ_dir: "./tmpl",
-	log_fname: "./binit.log",
+	log_fname: "./binnit.log",
 	max_size: 4096,
 }
 
@@ -144,7 +168,7 @@ func main() {
 
 	
 	
-	parse_config("binit.cfg", &p_conf)
+	parse_config("binnit.cfg", &p_conf)
 	
 
 	f, err := os.OpenFile(p_conf.log_fname, os.O_APPEND | os.O_CREATE | os.O_RDWR, 0600)
@@ -156,10 +180,10 @@ func main() {
 
 	
 	log.SetOutput(io.Writer(f))
-	log.SetPrefix("[binit]: ")
+	log.SetPrefix("[binnit]: ")
 	log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds)
 
-	log.Println("Binit version 0.1 -- Starting ")
+	log.Println("Binnit version 0.1 -- Starting ")
 	log.Printf("  + Serving pastes on: %s\n", p_conf.server_name)
 	log.Printf("  + listening on: %s:%s\n", p_conf.bind_addr, p_conf.bind_port )
 	log.Printf("  + paste_dir: %s\n", p_conf.paste_dir)
