@@ -43,8 +43,8 @@ var p_conf = Config{
 	bind_port: "8000",
 	paste_dir: "./pastes",
 	templ_dir: "./tmpl",
-	log_fname: "./binnit.log",
 	max_size: 4096,
+	log_file: "./binnit.log",
 }
 
 
@@ -171,9 +171,9 @@ func main() {
 	parse_config("binnit.cfg", &p_conf)
 	
 
-	f, err := os.OpenFile(p_conf.log_fname, os.O_APPEND | os.O_CREATE | os.O_RDWR, 0600)
+	f, err := os.OpenFile(p_conf.log_file, os.O_APPEND | os.O_CREATE | os.O_RDWR, 0600)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error opening logfile: %s. Exiting\n", p_conf.log_fname)
+		fmt.Fprintf(os.Stderr, "Error opening log_file: %s. Exiting\n", p_conf.log_file)
 		os.Exit(1)
 	}
 	defer f.Close()

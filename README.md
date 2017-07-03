@@ -1,4 +1,4 @@
-## binit -- minimal pastebin-like in golang
+## binnit -- minimal pastebin-like in golang
 
 That's just it. Preliminary version of a minimal, no-fuss
 pastebin-like service in golang. 
@@ -12,8 +12,9 @@ equal to the paste ID. The unique ID of a paste is obtained from the
 SHA256 of the concatenation of title, time, and content. Rendering is
 minimal, but can be enhanced.
 
-`binit` is currently configured through a simple key=value
-configuration file. The available options are:
+`binnit` is currently configured through a simple key=value
+configuration file, whose name can be specified on the command line
+through the option `-c <config\_file>`. The available options are:
 
 * server\_name  (the FQDN where the service is reachable from outside)
 * bind\_addr (the address to listen on)
@@ -22,6 +23,8 @@ configuration file. The available options are:
 * templ\_dir (the folder where HTML files and templates are kept)
 * max_size (the maximum allowed length of a paste, in bytes. Larger
     pastes will be trimmed to that length)
+* log_fname (path to the logfile)
+
 
 
 ### TODO
