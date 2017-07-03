@@ -34,7 +34,28 @@ import (
 	"io/ioutil"
 	"os"
 	"regexp"
+	"strings"
+	"strconv"
 )
+
+func format_rows(content string) (string) {
+
+	var ret string
+
+	lines := strings.Split(content, "\n")
+
+	ret += "<table class='content'>"
+	
+	for l_num, l := range lines {
+		ret += "<tr>\n"
+		ret += "<td class='lineno'><pre>"+ strconv.Itoa(l_num+1) + "</pre></td>"
+		ret += "<td class='line'><pre>"+ l +"</pre></td>"
+		ret += "</tr>"
+	}
+	ret += "</table>"
+	return ret
+}
+
 
 func prepare_paste_page(title, date, content, templ_dir string) (string, error) {
 
@@ -72,6 +93,9 @@ func prepare_paste_page(title, date, content, templ_dir string) (string, error) 
 		tmpl = string(re.ReplaceAll([]byte(tmpl), []byte(date)))
 
 		re, _ = regexp.Compile("{{CONTENT}}")
+		tmpl = string(re.ReplaceAll([]byte(tmpl), []byte(format_rows(content))))
+
+		re, _ = regexp.Compile("{{RAW_CONTENT}}")
 		tmpl = string(re.ReplaceAll([]byte(tmpl), []byte(content)))
 
 		s += tmpl

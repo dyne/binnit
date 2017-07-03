@@ -1,17 +1,49 @@
 <html>
+  <head>
+    <style type="text/css">
+      body {
+      margin-left: 5%;
+      line-height:1.6;
+      font-size:20px;
+      }
+      h1 {
+      background-color: #cccccc;
+      padding-left: 10px;
+      border-bottom: solid 5px #444444;
+      border-left: solid 5px #222222;
+      }
+      div.title {
+      border-top: 2px solid #444444;
+      border-left: 4px solid #444444;
+      margin: 3px;
+      padding-left: 5px;
+      }
+      input.button {
+      padding: 5px;
+      line-height: 1.6;
+      font-size: 20px;
+      
+      }
+    </style>
+  </head>
   <body>
-    <h1>Index.html</h1>
+    <h1>Binnit</h1>
 
     <form method="POST">
-      Title: <input type="text" name="title" size="24"/>
-      <br />
-      Paste:
-      <br />
-      <textarea name="paste" cols="80" rows="10"></textarea>
-      <br />
-      <input type="checkbox" name="show" value="1" checked />Show link
-      <br />
-      <input type="submit" value="Binit!">
+      <div class="title">
+        Title:
+        <input type="text" name="title" size="24"/>
+      </div>
+      <div class="title">
+        Paste:
+        <br />
+        <textarea name="paste" cols="100" rows="15"></textarea>
+        <br />
+        <input type="checkbox" name="show" value="1" checked />Show link
+        <br />
+      </div>
+      <input type="submit" class="button" value="Binnit!">
+      
     </form>
     
   </body>
