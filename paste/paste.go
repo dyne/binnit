@@ -7,6 +7,8 @@ import(
 	"os"
 	"io/ioutil"
 	"errors"
+	"bufio"
+	"strings"
 )
 
 
@@ -44,9 +46,28 @@ func Store(title, date, content, dest_dir string) (string, error) {
 }
 
 
-//func Retrieve(URI string) (title, date, content string) {
+func Retrieve(URI string) (title, date, content string, err error) {
 	
 	
+	f_cont, err := os.Open(URI)
+	defer f_cont.Close()
 	
 	
-//}
+	if err == nil {
+		stuff := bufio.NewScanner(f_cont)
+		// The first line contains the title
+		stuff.Scan() 
+		title = strings.Trim(strings.Split(stuff.Text(), ":")[1], " ")
+		stuff.Scan()
+		date = strings.Trim(strings.Join(strings.Split(stuff.Text(), ":")[1:], ":"), " ")
+		for stuff.Scan() {
+			content  += stuff.Text()
+		}
+	} else {
+
+		return "", "", "", errors.New("Cannot retrieve paste!!!")
+	}
+	
+	return title, date, content, nil
+}
+

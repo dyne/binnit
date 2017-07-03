@@ -61,7 +61,6 @@ func min (a, b int) int {
 func handle_get_paste(w http.ResponseWriter, r *http.Request) {
 
 	var paste_name, orig_name string
-	var err error
 
 	orig_name = filepath.Clean(r.URL.Path)
 	paste_name = p_conf.paste_dir + "/" + orig_name
@@ -75,9 +74,11 @@ func handle_get_paste(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, p_conf.templ_dir + "/index.html")
 	} else {
 		// otherwise, if the requested paste exists, we serve it...
-		if _, err = os.Stat(paste_name); err == nil && orig_name != "./" {
-			//http.ServeFile(w, r, paste_name)
-			s, err := prepare_paste_page(&p_conf, orig_name)
+
+		title, date, content, err := paste.Retrieve(paste_name)
+		
+		if err == nil {
+			s, err := prepare_paste_page(title, date, content, p_conf.templ_dir)
 			if err == nil {
 				fmt.Fprintf(w, "%s", s)
 				return
@@ -87,7 +88,7 @@ func handle_get_paste(w http.ResponseWriter, r *http.Request) {
 			}
 		} else {
 			// otherwise, we give say we didn't find it
-			fmt.Fprintf(w, "Paste '%s' not found\n", orig_name)
+			fmt.Fprintf(w, "%s\n", err)
 			return
 		}
 	}
