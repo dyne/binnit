@@ -61,7 +61,7 @@ func Retrieve(URI string) (title, date, content string, err error) {
 		stuff.Scan()
 		date = strings.Trim(strings.Join(strings.Split(stuff.Text(), ":")[1:], ":"), " ")
 		for stuff.Scan() {
-			content  += stuff.Text()
+			content  += stuff.Text() + "\n"
 		}
 	} else {
 
