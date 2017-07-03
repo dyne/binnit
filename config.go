@@ -34,6 +34,10 @@ import (
 	"strconv"
 )
 
+type Options struct {
+	conf_file string
+}
+
 
 type Config struct {
 	server_name string

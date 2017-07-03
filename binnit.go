@@ -33,7 +33,12 @@ import (
 	"time"
 	"io"
 	"binnit/paste"
+	"flag"
 )
+
+
+var conf_file = flag.String("c", "./binnit.cfg", "Configuration file for binnit")
+
 
 
 var p_conf = Config{
@@ -147,13 +152,15 @@ func req_handler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+
+
 func main() {
 
 	
-	
-	parse_config("binnit.cfg", &p_conf)
-	
+	flag.Parse()
 
+	parse_config(*conf_file, &p_conf)
+	
 	f, err := os.OpenFile(p_conf.log_file, os.O_APPEND | os.O_CREATE | os.O_RDWR, 0600)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error opening log_file: %s. Exiting\n", p_conf.log_file)
@@ -167,6 +174,7 @@ func main() {
 	log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds)
 
 	log.Println("Binnit version 0.1 -- Starting ")
+	log.Printf("  + Config file: %s\n", *conf_file)
 	log.Printf("  + Serving pastes on: %s\n", p_conf.server_name)
 	log.Printf("  + listening on: %s:%s\n", p_conf.bind_addr, p_conf.bind_port )
 	log.Printf("  + paste_dir: %s\n", p_conf.paste_dir)
