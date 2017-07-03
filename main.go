@@ -14,8 +14,9 @@ import (
 
 
 var p_conf = Config{
-	host: "localhost",
-	port: "8000",
+	server_name: "localhost",
+	bind_addr: "0.0.0.0",
+	bind_port: "8000",
 	paste_dir: "./pastes",
 	templ_dir: "./tmpl",
 	log_fname: "./binit.log",
@@ -108,13 +109,14 @@ func handle_put_paste(w http.ResponseWriter, r *http.Request) {
 				if err := ioutil.WriteFile(paste_dir+ paste_name, []byte(content), 0644); err == nil {
 					// and then we return the URL:
 					log.Printf("  `-- saving paste to : %s", paste_dir + paste_name)
-					hostname := r.Host
+					//hostname := r.Host
+					hostname := p_conf.server_name
 					if show := req_body.Get("show"); show != "1" {
 						fmt.Fprintf(w, "%s/%s", hostname, paste_name)
 						return
 					} else{
-						fmt.Fprintf(w, "<html><body>Link: <a href='%s'>%s</a></body></html>",
-							paste_hash[i:i+16], paste_hash[i:i+16])
+						fmt.Fprintf(w, "<html><body>Link: <a href='http://%s/%s'>http://%s/%s</a></body></html>",
+							hostname, paste_hash[i:i+16], hostname, paste_hash[i:i+16])
 						return
 					}
 				} else {
@@ -158,12 +160,13 @@ func main() {
 	log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds)
 
 	log.Println("Binit version 0.1 -- Starting ")
-	log.Printf("  + listening on: %s:%s\n", p_conf.host, p_conf.port )
+	log.Printf("  + Serving pastes on: %s\n", p_conf.server_name)
+	log.Printf("  + listening on: %s:%s\n", p_conf.bind_addr, p_conf.bind_port )
 	log.Printf("  + paste_dir: %s\n", p_conf.paste_dir)
 	log.Printf("  + templ_dir: %s\n", p_conf.templ_dir)
 	log.Printf("  + max_size: %d\n", p_conf.max_size)
 
 	
 	http.HandleFunc("/", req_handler)
-	log.Fatal(http.ListenAndServe(p_conf.host + ":" +  p_conf.port, nil))
+	log.Fatal(http.ListenAndServe(p_conf.bind_addr + ":" +  p_conf.bind_port, nil))
 }

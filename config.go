@@ -12,8 +12,9 @@ import (
 
 
 type Config struct {
-	host string
-	port string
+	server_name string
+	bind_addr string 
+	bind_port string
 	paste_dir string
 	templ_dir string
 	log_fname string
@@ -25,8 +26,8 @@ func (c Config) String() string {
 
 	var s string
 
-	s+= "Host: " + c.host + "\n"
-	s+= "Port: " + c.port + "\n"
+	s+= "Server name: " + c.server_name + "\n"
+	s+= "Listening on: " + c.bind_addr + ":" + c.bind_port +"\n"
 	s+= "paste_dir: " + c.paste_dir + "\n"
 	s+= "templ_dir: " + c.templ_dir + "\n"
 	s+= "log_fname: " + c.log_fname + "\n"
@@ -54,20 +55,22 @@ func parse_config (fname string, c *Config) error {
 			// it's not a blank line
 			if matched, _ := regexp.MatchString("^#", s); matched != true  {
 				// This is not a comment...
-				if matched, _ := regexp.MatchString("^([a-z_]+)=.*", s);  matched == true {
+				if matched, _ := regexp.MatchString("^([a-z_ ]+)=.*", s);  matched == true {
 					// and contains an assignment
 					fields := strings.Split(s, "=")
-					switch fields[0]{
-					case "host":
-						c.host = fields[1]
-					case "port":
-						c.port = fields[1]
+					switch strings.Trim(fields[0], " \t\""){
+					case "server_name":
+						c.server_name = strings.Trim(fields[1], " \t\"")
+					case "bind_addr":
+						c.bind_addr = strings.Trim(fields[1], " \t\"")
+					case "bind_port":
+						c.bind_port = strings.Trim(fields[1], " \t\"")
 					case "paste_dir":
-						c.paste_dir = fields[1]					
+						c.paste_dir = strings.Trim(fields[1], " \t\"")
 					case "templ_dir":
-						c.templ_dir = fields[1]
+						c.templ_dir = strings.Trim(fields[1], " \t\"")
 					case "log_fname":
-						c.log_fname = fields[1]
+						c.log_fname = strings.Trim(fields[1], " \t\"")
 					case "max_size":
 						if m_size, err := strconv.ParseUint(fields[1], 10, 16); err == nil {
 							c.max_size = uint16(m_size)
