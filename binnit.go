@@ -120,7 +120,7 @@ func handle_put_paste(w http.ResponseWriter, r *http.Request) {
 		if  err == nil {
 			hostname := p_conf.server_name
 			if show := req_body.Get("show"); show != "1" {
-				fmt.Fprintf(w, "%s/%s", hostname, ID)
+				fmt.Fprintf(w, "http://%s/%s", hostname, ID)
 				return
 			} else{
 				fmt.Fprintf(w, "<html><body>Link: <a href='http://%s/%s'>http://%s/%s</a></body></html>",
@@ -132,6 +132,8 @@ func handle_put_paste(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 }
+
+
 func req_handler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
