@@ -48,8 +48,9 @@ features, and implying a useless amount of complexity.
 A paste server must be able to do two things, 1) create a new paste
 and return its ID, and 2) retrieve an existing paste using its
 ID. `binnit` does just and only these two things, in the simplest
-possible way, without any external dependency. If you need more, then
-`binnit` is not for you.
+possible way, without any external dependency. If you need more than
+that, then `binnit` is not for you. But do you really need anything
+more?
 
 ## About minimalism
 
