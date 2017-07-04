@@ -10,18 +10,24 @@ what else do you need?
 
 ## WTF?
 
+`binnit` is a single executable with **no dependencies**. You **don't
+need** a web server. You **don't need** a SQL server. You **don't
+need** any external library. 
+
 `binnit` serves pastes in the format:
 
-    mypasteserver.org/abcdef1234567890
+    http://<server_name>/abcdef1234567890
 
-and stores them in a folder, one file per paste, whose filename is
-identical to the paste ID. The unique ID of a paste is obtained from
-the SHA256 of the concatenation of title, time, and content. Rendering
-is minimal, on purpose, but based on a customisable template.
+and stores them in a folder on the server, one file per paste, whose
+filename is identical to the paste ID. The unique ID of a paste is
+obtained from the SHA256 of the concatenation of title, time, and
+content. Rendering is minimal, on purpose, but based on a customisable
+template.
 
 `binnit` is currently configured through a simple key=value
 configuration file, whose name can be specified on the command line
-through the option `-c <config_file>`. The configurable options are:
+through the option `-c <config_file>`. If no config file is specified,
+`binnit` looks for `./binnit.cfg`. The configurable options are:
 
 * server\_name  (the FQDN where the service is reachable from outside)
 * bind\_addr (the address to listen on)
@@ -29,8 +35,8 @@ through the option `-c <config_file>`. The configurable options are:
 * paste\_dir (the folder where pastes are kept)
 * templ\_dir (the folder where HTML files and templates are kept)
 * max\_size (the maximum allowed length of a paste, in bytes. Larger
-    pastes will be trimmed to that length)
-* log_fname (path to the logfile)
+    pastes will be trimmed to that length.)
+* log_file (path to the logfile)
 
 ## Why another pastebin?
 
@@ -45,17 +51,33 @@ ID. `binnit` does just and only these two things, in the simplest
 possible way, without any external dependency. If you need more, then
 `binnit` is not for you.
 
-If you want to strip `binnit` down even further, you could consider
-removing:
-
-* sanity checks and error management
-* logging
-* the external configuration file
-* code comments
+## About minimalism
 
 > It seems that perfection is attained not when there is nothing more
 > to add, but when there is nothing more to remove (Antoine de Saint
 > Exupéry)
+
+`binnit` is intended to be truly minimal. It consists of about 500
+lines of golang source code in total, including:
+
+* ~110 lines for License statements (comments)
+* ~110 lines of core logic
+* ~90 blank lines
+* ~75 lines for template management
+* ~75 lines for config management
+* ~30 lines of pure comments
+
+If you want to strip `binnit` down even further, you could consider
+removing:
+
+* blank lines
+* the external configuration file
+* the template system 
+* sanity checks and error management
+* logging 
+* code comments
+
+You **CANNOT** remove the licence statements on each source file.
 
 
 ## LICENSE
