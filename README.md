@@ -83,8 +83,10 @@ You **CANNOT** remove the licence statements on each source file.
 
 ## LICENSE
 
-`binnit` can be used, modified, and redistributed under the terms of
-the GNU Affero General Public Licence, version 3 of the Licence or, at
-your option, any later version. Please see the LICENSE.md file for
-details.
+`binnit` is Copyright (2017) by Vincenzo "KatolaZ" Nicosia.
+
+`binnit` is free software. You can use, modify, and redistribute it
+under the terms of the GNU Affero General Public Licence, version 3 of
+the Licence or, at your option, any later version. Please see
+LICENSE.md for details.
 
