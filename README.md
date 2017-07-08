@@ -38,6 +38,23 @@ through the option `-c <config_file>`. If no config file is specified,
     pastes will be trimmed to that length.)
 * log_file (path to the logfile)
 
+As with other pastebin-like services, you can send a paste to `binnit`
+using `curl`. For instance, if your `binnit` server is running on
+`http://servername.net`, you can paste a file there using:
+
+
+    curl -F 'paste=<myfile' http://servername.net
+
+
+and obtain on output the ID associated to the newly created
+paste. Similarly
+
+    mylongcommand | curl -F 'paste=<-' http://servername.net
+
+will paste the output of `mylongcommand` to `http://servername.net`,
+and show on output the ID of the new paste.
+
+
 ## Why another pastebin?
 
 There are hundreds of pastebin-like servers in the wild. But the
