@@ -9,18 +9,17 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  *  General Public License for more details.
  *
- *  You should have received a copy of the GNU Affero General Public 
+ *  You should have received a copy of the GNU Affero General Public
  *  License along with this program.  If not, see
  *  <http://www.gnu.org/licenses/>.
  *
  *  (c) Vincenzo "KatolaZ" Nicosia 2017 -- <katolaz@freaknet.org>
- * 
- * 
- *  This file is part of "binnit", a minimal no-fuss pastebin-like 
+ *
+ *
+ *  This file is part of "binnit", a minimal no-fuss pastebin-like
  *  server written in golang
  *
  */
-
 
 /*
  *
@@ -35,28 +34,27 @@ import (
 	"io/ioutil"
 	"os"
 	"regexp"
-	"strings"
 	"strconv"
+	"strings"
 )
 
-func format_rows(content string) (string) {
+func format_rows(content string) string {
 
 	var ret string
 
 	lines := strings.Split(content, "\n")
 
 	ret += "<table class='content'>"
-	
+
 	for l_num, l := range lines {
 		ret += "<tr>\n"
-		ret += "<td class='lineno'><pre>"+ strconv.Itoa(l_num+1) + "</pre></td>"
-		ret += "<td class='line'><pre>"+ l +"</pre></td>"
+		ret += "<td class='lineno'><pre>" + strconv.Itoa(l_num+1) + "</pre></td>"
+		ret += "<td class='line'><pre>" + l + "</pre></td>"
 		ret += "</tr>"
 	}
 	ret += "</table>"
 	return ret
 }
-
 
 func prepare_paste_page(title, date, content, templ_dir string) (string, error) {
 
@@ -83,28 +81,26 @@ func prepare_paste_page(title, date, content, templ_dir string) (string, error) 
 	f_templ, err := os.Open(templ_file)
 	defer f_templ.Close()
 
-	
 	if cont, err := ioutil.ReadFile(templ_file); err == nil {
 		tmpl := string(cont)
-		// ...and replace  {{CONTENT}} with the paste itself!
 		re, _ := regexp.Compile("{{TITLE}}")
-		tmpl = string(re.ReplaceAll([]byte(tmpl), []byte(title)))
+		tmpl = string(re.ReplaceAllLiteralString(tmpl, title))
 
 		re, _ = regexp.Compile("{{DATE}}")
-		tmpl = string(re.ReplaceAll([]byte(tmpl), []byte(date)))
+		tmpl = string(re.ReplaceAllLiteralString(tmpl, date))
 
 		re, _ = regexp.Compile("{{CONTENT}}")
-		tmpl = string(re.ReplaceAll([]byte(tmpl), []byte(format_rows(content))))
+		tmpl = string(re.ReplaceAllLiteralString(tmpl, format_rows(content)))
 
 		re, _ = regexp.Compile("{{RAW_CONTENT}}")
-		tmpl = string(re.ReplaceAll([]byte(tmpl), []byte(content)))
+		tmpl = string(re.ReplaceAllLiteralString(tmpl, content))
 
 		s += tmpl
-		
+
 	} else {
 		return "", errors.New("Error opening template file")
 	}
-	
+
 	// insert footer
 	foot_file := templ_dir + "/footer.html"
 	f_foot, err := os.Open(foot_file)
