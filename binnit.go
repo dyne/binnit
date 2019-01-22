@@ -24,9 +24,9 @@
 package main
 
 import (
-	"binnit/paste"
 	"flag"
 	"fmt"
+	"github.com/dyne/binnit/paste"
 	"html"
 	"io"
 	"log"
