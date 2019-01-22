@@ -80,7 +80,7 @@ func handle_get_paste(w http.ResponseWriter, r *http.Request) {
 		title = html.EscapeString(title)
 		date = html.EscapeString(date)
 		content = html.EscapeString(content)
-		
+
 		if err == nil {
 			s, err := prepare_paste_page(title, date, content, p_conf.templ_dir)
 			if err == nil {

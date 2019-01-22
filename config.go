@@ -9,14 +9,14 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  *  General Public License for more details.
  *
- *  You should have received a copy of the GNU Affero General Public 
+ *  You should have received a copy of the GNU Affero General Public
  *  License along with this program.  If not, see
  *  <http://www.gnu.org/licenses/>.
  *
  *  (c) Vincenzo "KatolaZ" Nicosia 2017 -- <katolaz@freaknet.org>
- * 
- * 
- *  This file is part of "binnit", a minimal no-fuss pastebin-like 
+ *
+ *
+ *  This file is part of "binnit", a minimal no-fuss pastebin-like
  *  server written in golang
  *
  */
@@ -41,7 +41,7 @@ type Options struct {
 
 type Config struct {
 	server_name string
-	bind_addr string 
+	bind_addr string
 	bind_port string
 	paste_dir string
 	templ_dir string
@@ -62,12 +62,12 @@ func (c Config) String() string {
 	s+= "log_file: " + c.log_file + "\n"
 
 	return s
-	
+
 }
 
 func parse_config (fname string, c *Config) error {
 
-	
+
 	f, err := os.Open(fname);
 	if  err != nil {
 		return err
