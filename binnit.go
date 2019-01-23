@@ -123,7 +123,7 @@ func handle_put_paste(w http.ResponseWriter, r *http.Request) {
 		ID, err := paste.Store(title, date, content, p_conf.paste_dir)
 
 		log.Printf("   title: %s\npaste: %s\n", title, content)
-		log.Printf("   ID: %s; err: %s\n", ID, err)
+		log.Printf("   ID: %s; err: %v\n", ID, err)
 
 		if err == nil {
 			hostname := p_conf.server_name
