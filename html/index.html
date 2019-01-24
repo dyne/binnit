@@ -4,23 +4,20 @@
   </head>
   <body>
     <h1>Binnit</h1>
-
     <form method="POST">
-      <div class="title">
-        Title:
-        <input type="text" name="title" size="24"/>
-      </div>
-      <div class="title">
-        Paste:
-        <br />
-        <textarea name="paste" cols="100" rows="15"></textarea>
-        <br />
-        <input type="checkbox" name="show" value="1" checked />Show link
-        <br />
-      </div>
-      <input type="submit" class="button" value="Binnit!">
-      
+    <div class="title">
+      <p class="title">
+        <input type="text" name="title" placeholder="Title goes here..."/>
+      </p>
+      <p class="action">
+        <input type="checkbox" name="show" value="1" id="id_show" checked />
+        <label for "id_show"> Show link </label>
+        <input type="submit" class="button" value="Binnit!">
+      </p>
+    </div>
+    <div class="title">
+      <textarea name="paste" cols="40" placeholder="The pasta goes here..." rows="10" maxlength="262144000"></textarea>
+    </div>
     </form>
-    
   </body>
 </html>
