@@ -59,6 +59,10 @@ func min(a, b int) int {
 
 }
 
+func handleIndex(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, pConf.templDir+"/index.html")
+}
+
 func handleGetPaste(w http.ResponseWriter, r *http.Request) {
 
 	var pasteName, origName string
@@ -70,32 +74,27 @@ func handleGetPaste(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("Received GET from %s for  '%s'\n", origIP, origName)
 
-	// The default is to serve index.html
-	if (origName == "/") || (origName == "/index.html") {
-		http.ServeFile(w, r, pConf.templDir+"/index.html")
-	} else {
-		// otherwise, if the requested paste exists, we serve it...
+	// if the requested paste exists, we serve it...
 
-		title, date, content, err := paste.Retrieve(pasteName)
+	title, date, content, err := paste.Retrieve(pasteName)
 
-		title = html.EscapeString(title)
-		date = html.EscapeString(date)
-		content = html.EscapeString(content)
+	title = html.EscapeString(title)
+	date = html.EscapeString(date)
+	content = html.EscapeString(content)
 
+	if err == nil {
+		s, err := preparePastePage(title, date, content, pConf.templDir)
 		if err == nil {
-			s, err := preparePastePage(title, date, content, pConf.templDir)
-			if err == nil {
-				fmt.Fprintf(w, "%s", s)
-				return
-			}
-			fmt.Fprintf(w, "Error recovering paste '%s'\n", origName)
+			fmt.Fprintf(w, "%s", s)
 			return
-
 		}
-		// otherwise, we give say we didn't find it
-		fmt.Fprintf(w, "%s\n", err)
+		fmt.Fprintf(w, "Error recovering paste '%s'\n", origName)
 		return
+
 	}
+	// otherwise, we give say we didn't find it
+	fmt.Fprintf(w, "%s\n", err)
+	return
 }
 
 func handlePutPaste(w http.ResponseWriter, r *http.Request) {
@@ -141,18 +140,6 @@ func handlePutPaste(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func reqHandler(w http.ResponseWriter, r *http.Request) {
-
-	switch r.Method {
-	case "GET":
-		handleGetPaste(w, r)
-	case "POST":
-		handlePutPaste(w, r)
-	default:
-		http.NotFound(w, r)
-	}
-}
-
 func main() {
 
 	flag.Parse()
@@ -180,8 +167,11 @@ func main() {
 
 	// FIXME: create paste_dir if it does not exist
 	var r = mux.NewRouter()
-	r.HandleFunc("/", reqHandler)
-	r.HandleFunc("/{id}", reqHandler)
+	st := "/" + pConf.staticDir + "/"
+	r.PathPrefix(st).Handler(http.StripPrefix(st, http.FileServer(http.Dir(pConf.staticDir))))
+	r.HandleFunc("/", handleIndex).Methods("GET")
+	r.HandleFunc("/", handlePutPaste).Methods("POST")
+	r.HandleFunc("/{id}", handleGetPaste).Methods("GET")
 
 	log.Fatal(http.ListenAndServe(pConf.bindAddr+":"+pConf.bindPort, r))
 }

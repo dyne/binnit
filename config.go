@@ -42,6 +42,7 @@ type config struct {
 	bindPort   string
 	pasteDir   string
 	templDir   string
+	staticDir  string
 	maxSize    uint16
 	logFile    string
 }
@@ -54,6 +55,7 @@ func (c config) String() string {
 	s += "Listening on: " + c.bindAddr + ":" + c.bindPort + "\n"
 	s += "paste_dir: " + c.pasteDir + "\n"
 	s += "templ_dir: " + c.templDir + "\n"
+	s += "static_dir: " + c.staticDir + "\n"
 	s += "max_size: " + string(c.maxSize) + "\n"
 	s += "log_file: " + c.logFile + "\n"
 
@@ -92,6 +94,8 @@ func parseConfig(fname string, c *config) error {
 						c.pasteDir = strings.Trim(fields[1], " \t\"")
 					case "templ_dir":
 						c.templDir = strings.Trim(fields[1], " \t\"")
+					case "static_dir":
+						c.staticDir = strings.Trim(fields[1], " \t\"")
 					case "log_file":
 						c.logFile = strings.Trim(fields[1], " \t\"")
 					case "max_size":

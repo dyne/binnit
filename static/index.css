@@ -1,0 +1,22 @@
+body {
+  margin-left: 5%;
+  line-height:1.6;
+  font-size:20px;
+}
+h1 {
+  background-color: #cccccc;
+  padding-left: 10px;
+  border-bottom: solid 5px #444444;
+  border-left: solid 5px #222222;
+  }
+div.title {
+  border-top: 2px solid #444444;
+  border-left: 4px solid #444444;
+  margin: 3px;
+  padding-left: 5px;
+}
+input.button {
+  padding: 5px;
+  line-height: 1.6;
+  font-size: 20px;
+}
