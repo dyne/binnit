@@ -31,7 +31,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"path/filepath"
 	"time"
 
 	"github.com/dyne/binnit/paste"
@@ -65,9 +64,11 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 
 func handleGetPaste(w http.ResponseWriter, r *http.Request) {
 
+	vars := mux.Vars(r)
+
 	var pasteName, origName string
 
-	origName = filepath.Clean(r.URL.Path)
+	origName = vars["id"]
 	pasteName = pConf.pasteDir + "/" + origName
 
 	origIP := r.RemoteAddr
@@ -83,7 +84,7 @@ func handleGetPaste(w http.ResponseWriter, r *http.Request) {
 	content = html.EscapeString(content)
 
 	if err == nil {
-		s, err := preparePastePage(title, date, content, pConf.templDir)
+		s, err := preparePastePage(title, date, content, pConf.templDir, false)
 		if err == nil {
 			fmt.Fprintf(w, "%s", s)
 			return
@@ -97,6 +98,32 @@ func handleGetPaste(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+func handleGetRawPaste(w http.ResponseWriter, r *http.Request) {
+
+	vars := mux.Vars(r)
+	var pasteName, origName string
+	origName = vars["id"]
+	pasteName = pConf.pasteDir + "/" + origName
+	origIP := r.RemoteAddr
+	log.Printf("Received GET from %s for  '%s'\n", origIP, origName)
+	// if the requested paste exists, we serve it...
+	title, date, content, err := paste.Retrieve(pasteName)
+	title = html.EscapeString(title)
+	date = html.EscapeString(date)
+	content = html.EscapeString(content)
+	if err == nil {
+		s, err := preparePastePage(title, date, content, pConf.templDir, true)
+		if err == nil {
+			fmt.Fprintf(w, "%s", s)
+			return
+		}
+		fmt.Fprintf(w, "Error recovering paste '%s'\n", origName)
+		return
+	}
+	// otherwise, we give say we didn't find it
+	fmt.Fprintf(w, "%s\n", err)
+	return
+}
 func handlePutPaste(w http.ResponseWriter, r *http.Request) {
 
 	err1 := r.ParseForm()
@@ -166,12 +193,16 @@ func main() {
 	log.Printf("  + max_size: %d\n", pConf.maxSize)
 
 	// FIXME: create paste_dir if it does not exist
-	var r = mux.NewRouter()
+
 	st := "/" + pConf.staticDir + "/"
+
+	var r = mux.NewRouter()
+	r.StrictSlash(true)
 	r.PathPrefix(st).Handler(http.StripPrefix(st, http.FileServer(http.Dir(pConf.staticDir))))
 	r.HandleFunc("/", handleIndex).Methods("GET")
 	r.HandleFunc("/", handlePutPaste).Methods("POST")
 	r.HandleFunc("/{id}", handleGetPaste).Methods("GET")
+	r.HandleFunc("/{id}/raw", handleGetRawPaste).Methods("GET")
 
 	log.Fatal(http.ListenAndServe(pConf.bindAddr+":"+pConf.bindPort, r))
 }

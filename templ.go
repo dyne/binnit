@@ -56,61 +56,43 @@ func formatRows(content string) string {
 	return ret
 }
 
-func preparePastePage(title, date, content, templDir string) (string, error) {
+func formatRaw(content string) string {
+	var ret string
+	ret += "<pre>\n<code>\n"
+	ret += content
+	ret += "\n</code>\n<pre>\n"
+	return ret
+}
+
+func preparePastePage(title, date, content, templDir string, raw bool) (string, error) {
 
 	s := ""
+	if !raw {
+		templFile := templDir + "/paste.html"
 
-	// insert header
-
-	headFile := templDir + "/header.html"
-
-	fHead, err := os.Open(headFile)
-	defer fHead.Close()
-
-	if err == nil {
-		cont, err := ioutil.ReadFile(headFile)
-		if err == nil {
-			s += string(cont)
+		fTempl, err := os.Open(templFile)
+		if err != nil {
+			return "", errors.New("Error opening template file")
 		}
-	}
+		defer fTempl.Close()
 
-	// insert content
+		if cont, err := ioutil.ReadFile(templFile); err == nil {
+			tmpl := string(cont)
+			re, _ := regexp.Compile("{{TITLE}}")
+			tmpl = string(re.ReplaceAllLiteralString(tmpl, title))
 
-	// ...Let's read the template
-	templFile := templDir + "/templ.html"
-	fTempl, err := os.Open(templFile)
-	defer fTempl.Close()
-
-	if cont, err := ioutil.ReadFile(templFile); err == nil {
-		tmpl := string(cont)
-		re, _ := regexp.Compile("{{TITLE}}")
-		tmpl = string(re.ReplaceAllLiteralString(tmpl, title))
-
-		re, _ = regexp.Compile("{{DATE}}")
-		tmpl = string(re.ReplaceAllLiteralString(tmpl, date))
-
-		re, _ = regexp.Compile("{{CONTENT}}")
-		tmpl = string(re.ReplaceAllLiteralString(tmpl, formatRows(content)))
-
-		re, _ = regexp.Compile("{{RAW_CONTENT}}")
-		tmpl = string(re.ReplaceAllLiteralString(tmpl, content))
-
-		s += tmpl
-
+			re, _ = regexp.Compile("{{DATE}}")
+			tmpl = string(re.ReplaceAllLiteralString(tmpl, date))
+			re, _ = regexp.Compile("{{CONTENT}}")
+			tmpl = string(re.ReplaceAllLiteralString(tmpl, formatRows(content)))
+			s += tmpl
+		} else {
+			return "", errors.New("Error opening template file")
+		}
 	} else {
-		return "", errors.New("Error opening template file")
-	}
-
-	// insert footer
-	footFile := templDir + "/footer.html"
-	fFoot, err := os.Open(footFile)
-	defer fFoot.Close()
-
-	if err == nil {
-		cont, err := ioutil.ReadFile(footFile)
-		if err == nil {
-			s += string(cont)
-		}
+		s += "<html>\n<head>\n</head>\n<body>\n"
+		s += formatRaw(content)
+		s += "</body>\n</html>"
 	}
 	return s, nil
 }
