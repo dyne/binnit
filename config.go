@@ -21,87 +21,82 @@
  *
  */
 
-
 package main
 
-
 import (
+	"bufio"
 	"fmt"
 	"os"
-	"bufio"
 	"regexp"
-	"strings"
 	"strconv"
+	"strings"
 )
 
-type Options struct {
-	conf_file string
+type options struct {
+	confFile string
 }
 
-
-type Config struct {
-	server_name string
-	bind_addr string
-	bind_port string
-	paste_dir string
-	templ_dir string
-	max_size uint16
-	log_file string
+type config struct {
+	serverName string
+	bindAddr   string
+	bindPort   string
+	pasteDir   string
+	templDir   string
+	maxSize    uint16
+	logFile    string
 }
 
-
-func (c Config) String() string {
+func (c config) String() string {
 
 	var s string
 
-	s+= "Server name: " + c.server_name + "\n"
-	s+= "Listening on: " + c.bind_addr + ":" + c.bind_port +"\n"
-	s+= "paste_dir: " + c.paste_dir + "\n"
-	s+= "templ_dir: " + c.templ_dir + "\n"
-	s+= "max_size: " + string(c.max_size) + "\n"
-	s+= "log_file: " + c.log_file + "\n"
+	s += "Server name: " + c.serverName + "\n"
+	s += "Listening on: " + c.bindAddr + ":" + c.bindPort + "\n"
+	s += "paste_dir: " + c.pasteDir + "\n"
+	s += "templ_dir: " + c.templDir + "\n"
+	s += "max_size: " + string(c.maxSize) + "\n"
+	s += "log_file: " + c.logFile + "\n"
 
 	return s
 
 }
 
-func parse_config (fname string, c *Config) error {
+func parseConfig(fname string, c *config) error {
 
-
-	f, err := os.Open(fname);
-	if  err != nil {
+	f, err := os.Open(fname)
+	if err != nil {
 		return err
 	}
 
 	r := bufio.NewScanner(f)
 
 	line := 0
-	for r.Scan (){
+	for r.Scan() {
 		s := r.Text()
-		line += 1
+		line++
 		if matched, _ := regexp.MatchString("^([ \t]*)$", s); matched != true {
 			// it's not a blank line
-			if matched, _ := regexp.MatchString("^#", s); matched != true  {
+			if matched, _ := regexp.MatchString("^#", s); matched != true {
 				// This is not a comment...
-				if matched, _ := regexp.MatchString("^([a-z_ ]+)=.*", s);  matched == true {
+				if matched, _ := regexp.MatchString("^([a-z_ ]+)=.*", s); matched == true {
 					// and contains an assignment
 					fields := strings.Split(s, "=")
-					switch strings.Trim(fields[0], " \t\""){
+					switch strings.Trim(fields[0], " \t\"") {
 					case "server_name":
-						c.server_name = strings.Trim(fields[1], " \t\"")
+						c.serverName = strings.Trim(fields[1], " \t\"")
 					case "bind_addr":
-						c.bind_addr = strings.Trim(fields[1], " \t\"")
+						c.bindAddr = strings.Trim(fields[1], " \t\"")
 					case "bind_port":
-						c.bind_port = strings.Trim(fields[1], " \t\"")
+						c.bindPort = strings.Trim(fields[1], " \t\"")
 					case "paste_dir":
-						c.paste_dir = strings.Trim(fields[1], " \t\"")
+						c.pasteDir = strings.Trim(fields[1], " \t\"")
 					case "templ_dir":
-						c.templ_dir = strings.Trim(fields[1], " \t\"")
+						c.templDir = strings.Trim(fields[1], " \t\"")
 					case "log_file":
-						c.log_file = strings.Trim(fields[1], " \t\"")
+						c.logFile = strings.Trim(fields[1], " \t\"")
 					case "max_size":
-						if m_size, err := strconv.ParseUint(fields[1], 10, 16); err == nil {
-							c.max_size = uint16(m_size)
+						if mSize, err := strconv.ParseUint(fields[1], 10, 16); err == nil {
+							c.maxSize = uint16(mSize)
 						} else {
 							fmt.Fprintf(os.Stderr, "Invalid max_size value %s at line %d (max: 65535)\n",
 								fields[1], line)
@@ -119,5 +114,3 @@ func parse_config (fname string, c *Config) error {
 	}
 	return nil
 }
-
-

@@ -38,7 +38,7 @@ import (
 	"strings"
 )
 
-func format_rows(content string) string {
+func formatRows(content string) string {
 
 	var ret string
 
@@ -46,9 +46,9 @@ func format_rows(content string) string {
 
 	ret += "<table class='content'>"
 
-	for l_num, l := range lines {
+	for lNum, l := range lines {
 		ret += "<tr>\n"
-		ret += "<td class='lineno'><pre>" + strconv.Itoa(l_num+1) + "</pre></td>"
+		ret += "<td class='lineno'><pre>" + strconv.Itoa(lNum+1) + "</pre></td>"
 		ret += "<td class='line'><pre>" + l + "</pre></td>"
 		ret += "</tr>"
 	}
@@ -56,19 +56,19 @@ func format_rows(content string) string {
 	return ret
 }
 
-func prepare_paste_page(title, date, content, templ_dir string) (string, error) {
+func preparePastePage(title, date, content, templDir string) (string, error) {
 
 	s := ""
 
 	// insert header
 
-	head_file := templ_dir + "/header.html"
+	headFile := templDir + "/header.html"
 
-	f_head, err := os.Open(head_file)
-	defer f_head.Close()
+	fHead, err := os.Open(headFile)
+	defer fHead.Close()
 
 	if err == nil {
-		cont, err := ioutil.ReadFile(head_file)
+		cont, err := ioutil.ReadFile(headFile)
 		if err == nil {
 			s += string(cont)
 		}
@@ -77,11 +77,11 @@ func prepare_paste_page(title, date, content, templ_dir string) (string, error) 
 	// insert content
 
 	// ...Let's read the template
-	templ_file := templ_dir + "/templ.html"
-	f_templ, err := os.Open(templ_file)
-	defer f_templ.Close()
+	templFile := templDir + "/templ.html"
+	fTempl, err := os.Open(templFile)
+	defer fTempl.Close()
 
-	if cont, err := ioutil.ReadFile(templ_file); err == nil {
+	if cont, err := ioutil.ReadFile(templFile); err == nil {
 		tmpl := string(cont)
 		re, _ := regexp.Compile("{{TITLE}}")
 		tmpl = string(re.ReplaceAllLiteralString(tmpl, title))
@@ -90,7 +90,7 @@ func prepare_paste_page(title, date, content, templ_dir string) (string, error) 
 		tmpl = string(re.ReplaceAllLiteralString(tmpl, date))
 
 		re, _ = regexp.Compile("{{CONTENT}}")
-		tmpl = string(re.ReplaceAllLiteralString(tmpl, format_rows(content)))
+		tmpl = string(re.ReplaceAllLiteralString(tmpl, formatRows(content)))
 
 		re, _ = regexp.Compile("{{RAW_CONTENT}}")
 		tmpl = string(re.ReplaceAllLiteralString(tmpl, content))
@@ -102,12 +102,12 @@ func prepare_paste_page(title, date, content, templ_dir string) (string, error) 
 	}
 
 	// insert footer
-	foot_file := templ_dir + "/footer.html"
-	f_foot, err := os.Open(foot_file)
-	defer f_foot.Close()
+	footFile := templDir + "/footer.html"
+	fFoot, err := os.Open(footFile)
+	defer fFoot.Close()
 
 	if err == nil {
-		cont, err := ioutil.ReadFile(foot_file)
+		cont, err := ioutil.ReadFile(footFile)
 		if err == nil {
 			s += string(cont)
 		}

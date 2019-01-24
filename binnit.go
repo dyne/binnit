@@ -26,7 +26,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/dyne/binnit/paste"
 	"html"
 	"io"
 	"log"
@@ -34,120 +33,120 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/dyne/binnit/paste"
 )
 
-var conf_file = flag.String("c", "./binnit.cfg", "Configuration file for binnit")
+var confFile = flag.String("c", "./binnit.cfg", "Configuration file for binnit")
 
-var p_conf = Config{
-	server_name: "localhost",
-	bind_addr:   "0.0.0.0",
-	bind_port:   "8000",
-	paste_dir:   "./pastes",
-	templ_dir:   "./tmpl",
-	max_size:    4096,
-	log_file:    "./binnit.log",
+var pConf = config{
+	serverName: "localhost",
+	bindAddr:   "0.0.0.0",
+	bindPort:   "8000",
+	pasteDir:   "./pastes",
+	templDir:   "./tmpl",
+	maxSize:    4096,
+	logFile:    "./binnit.log",
 }
 
 func min(a, b int) int {
 
 	if a > b {
 		return b
-	} else {
-		return a
 	}
+	return a
 
 }
 
-func handle_get_paste(w http.ResponseWriter, r *http.Request) {
+func handleGetPaste(w http.ResponseWriter, r *http.Request) {
 
-	var paste_name, orig_name string
+	var pasteName, origName string
 
-	orig_name = filepath.Clean(r.URL.Path)
-	paste_name = p_conf.paste_dir + "/" + orig_name
+	origName = filepath.Clean(r.URL.Path)
+	pasteName = pConf.pasteDir + "/" + origName
 
-	orig_IP := r.RemoteAddr
+	origIP := r.RemoteAddr
 
-	log.Printf("Received GET from %s for  '%s'\n", orig_IP, orig_name)
+	log.Printf("Received GET from %s for  '%s'\n", origIP, origName)
 
 	// The default is to serve index.html
-	if (orig_name == "/") || (orig_name == "/index.html") {
-		http.ServeFile(w, r, p_conf.templ_dir+"/index.html")
+	if (origName == "/") || (origName == "/index.html") {
+		http.ServeFile(w, r, pConf.templDir+"/index.html")
 	} else {
 		// otherwise, if the requested paste exists, we serve it...
 
-		title, date, content, err := paste.Retrieve(paste_name)
+		title, date, content, err := paste.Retrieve(pasteName)
 
 		title = html.EscapeString(title)
 		date = html.EscapeString(date)
 		content = html.EscapeString(content)
 
 		if err == nil {
-			s, err := prepare_paste_page(title, date, content, p_conf.templ_dir)
+			s, err := preparePastePage(title, date, content, pConf.templDir)
 			if err == nil {
 				fmt.Fprintf(w, "%s", s)
 				return
-			} else {
-				fmt.Fprintf(w, "Error recovering paste '%s'\n", orig_name)
-				return
 			}
-		} else {
-			// otherwise, we give say we didn't find it
-			fmt.Fprintf(w, "%s\n", err)
+			fmt.Fprintf(w, "Error recovering paste '%s'\n", origName)
 			return
+
 		}
+		// otherwise, we give say we didn't find it
+		fmt.Fprintf(w, "%s\n", err)
+		return
 	}
 }
 
-func handle_put_paste(w http.ResponseWriter, r *http.Request) {
+func handlePutPaste(w http.ResponseWriter, r *http.Request) {
 
 	err1 := r.ParseForm()
-	err2 := r.ParseMultipartForm(int64(2 * p_conf.max_size))
+	err2 := r.ParseMultipartForm(int64(2 * pConf.maxSize))
 
 	if err1 != nil && err2 != nil {
 		// Invalid POST -- let's serve the default file
-		http.ServeFile(w, r, p_conf.templ_dir+"/index.html")
+		http.ServeFile(w, r, pConf.templDir+"/index.html")
 	} else {
-		req_body := r.PostForm
+		reqBody := r.PostForm
 
-		orig_IP := r.RemoteAddr
+		origIP := r.RemoteAddr
 
-		log.Printf("Received new POST from %s\n", orig_IP)
+		log.Printf("Received new POST from %s\n", origIP)
 
 		// get title, body, and time
-		title := req_body.Get("title")
+		title := reqBody.Get("title")
 		date := time.Now().String()
-		content := req_body.Get("paste")
+		content := reqBody.Get("paste")
 
-		content = content[0:min(len(content), int(p_conf.max_size))]
+		content = content[0:min(len(content), int(pConf.maxSize))]
 
-		ID, err := paste.Store(title, date, content, p_conf.paste_dir)
+		ID, err := paste.Store(title, date, content, pConf.pasteDir)
 
 		log.Printf("   title: %s\npaste: %s\n", title, content)
 		log.Printf("   ID: %s; err: %v\n", ID, err)
 
 		if err == nil {
-			hostname := p_conf.server_name
-			if show := req_body.Get("show"); show != "1" {
+			hostname := pConf.serverName
+			if show := reqBody.Get("show"); show != "1" {
 				fmt.Fprintf(w, "http://%s/%s\n", hostname, ID)
 				return
-			} else {
-				fmt.Fprintf(w, "<html><body>Link: <a href='http://%s/%s'>http://%s/%s</a></body></html>",
-					hostname, ID, hostname, ID)
-				return
 			}
-		} else {
-			fmt.Fprintf(w, "%s\n", err)
+			fmt.Fprintf(w, "<html><body>Link: <a href='http://%s/%s'>http://%s/%s</a></body></html>",
+				hostname, ID, hostname, ID)
+			return
+
 		}
+		fmt.Fprintf(w, "%s\n", err)
+
 	}
 }
 
-func req_handler(w http.ResponseWriter, r *http.Request) {
+func reqHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case "GET":
-		handle_get_paste(w, r)
+		handleGetPaste(w, r)
 	case "POST":
-		handle_put_paste(w, r)
+		handlePutPaste(w, r)
 	default:
 		http.NotFound(w, r)
 	}
@@ -157,11 +156,11 @@ func main() {
 
 	flag.Parse()
 
-	parse_config(*conf_file, &p_conf)
+	parseConfig(*confFile, &pConf)
 
-	f, err := os.OpenFile(p_conf.log_file, os.O_APPEND|os.O_CREATE|os.O_RDWR, 0600)
+	f, err := os.OpenFile(pConf.logFile, os.O_APPEND|os.O_CREATE|os.O_RDWR, 0600)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error opening log_file: %s. Exiting\n", p_conf.log_file)
+		fmt.Fprintf(os.Stderr, "Error opening log file: %s. Exiting\n", pConf.logFile)
 		os.Exit(1)
 	}
 	defer f.Close()
@@ -171,15 +170,15 @@ func main() {
 	log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds)
 
 	log.Println("Binnit version 0.1 -- Starting ")
-	log.Printf("  + Config file: %s\n", *conf_file)
-	log.Printf("  + Serving pastes on: %s\n", p_conf.server_name)
-	log.Printf("  + listening on: %s:%s\n", p_conf.bind_addr, p_conf.bind_port)
-	log.Printf("  + paste_dir: %s\n", p_conf.paste_dir)
-	log.Printf("  + templ_dir: %s\n", p_conf.templ_dir)
-	log.Printf("  + max_size: %d\n", p_conf.max_size)
+	log.Printf("  + Config file: %s\n", *confFile)
+	log.Printf("  + Serving pastes on: %s\n", pConf.serverName)
+	log.Printf("  + listening on: %s:%s\n", pConf.bindAddr, pConf.bindPort)
+	log.Printf("  + paste_dir: %s\n", pConf.pasteDir)
+	log.Printf("  + templ_dir: %s\n", pConf.templDir)
+	log.Printf("  + max_size: %d\n", pConf.maxSize)
 
 	// FIXME: create paste_dir if it does not exist
 
-	http.HandleFunc("/", req_handler)
-	log.Fatal(http.ListenAndServe(p_conf.bind_addr+":"+p_conf.bind_port, nil))
+	http.HandleFunc("/", reqHandler)
+	log.Fatal(http.ListenAndServe(pConf.bindAddr+":"+pConf.bindPort, nil))
 }
