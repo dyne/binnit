@@ -35,6 +35,7 @@ import (
 	"time"
 
 	"github.com/dyne/binnit/paste"
+	"github.com/gorilla/mux"
 )
 
 var confFile = flag.String("c", "./binnit.cfg", "Configuration file for binnit")
@@ -178,7 +179,9 @@ func main() {
 	log.Printf("  + max_size: %d\n", pConf.maxSize)
 
 	// FIXME: create paste_dir if it does not exist
+	var r = mux.NewRouter()
+	r.HandleFunc("/", reqHandler)
+	r.HandleFunc("/{id}", reqHandler)
 
-	http.HandleFunc("/", reqHandler)
-	log.Fatal(http.ListenAndServe(pConf.bindAddr+":"+pConf.bindPort, nil))
+	log.Fatal(http.ListenAndServe(pConf.bindAddr+":"+pConf.bindPort, r))
 }
