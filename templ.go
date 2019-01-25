@@ -34,37 +34,20 @@ import (
 	"io/ioutil"
 	"os"
 	"regexp"
-	"strconv"
-	"strings"
 )
 
-func formatRows(content string) string {
-
-	var ret string
-
-	lines := strings.Split(content, "\n")
-
-	ret += "<table class='content'>"
-
-	for lNum, l := range lines {
-		ret += "<tr>\n"
-		ret += "<td class='lineno'><pre>" + strconv.Itoa(lNum+1) + "</pre></td>"
-		ret += "<td class='line'><pre>" + l + "</pre></td>"
-		ret += "</tr>"
+func formatRaw(content, lang string) string {
+	if lang == "" {
+		lang = "text"
 	}
-	ret += "</table>"
-	return ret
-}
-
-func formatRaw(content string) string {
 	var ret string
-	ret += "<pre>\n<code>\n"
+	ret += "<pre><code class=\"language-" + lang + " line-numbers\">\n"
 	ret += content
-	ret += "\n</code>\n<pre>\n"
+	ret += "</code><pre>\n"
 	return ret
 }
 
-func preparePastePage(title, date, content, templDir string, raw bool) (string, error) {
+func preparePastePage(title, date, lang, content, templDir string, raw bool) (string, error) {
 
 	s := ""
 	if !raw {
@@ -83,15 +66,17 @@ func preparePastePage(title, date, content, templDir string, raw bool) (string, 
 
 			re, _ = regexp.Compile("{{DATE}}")
 			tmpl = string(re.ReplaceAllLiteralString(tmpl, date))
+			re, _ = regexp.Compile("{{LANGUAGE}}")
+			tmpl = string(re.ReplaceAllLiteralString(tmpl, lang))
 			re, _ = regexp.Compile("{{CONTENT}}")
-			tmpl = string(re.ReplaceAllLiteralString(tmpl, formatRows(content)))
+			tmpl = string(re.ReplaceAllLiteralString(tmpl, formatRaw(content, lang)))
 			s += tmpl
 		} else {
 			return "", errors.New("Error opening template file")
 		}
 	} else {
 		s += "<html>\n<head>\n</head>\n<body>\n"
-		s += formatRaw(content)
+		s += formatRaw(content, "")
 		s += "</body>\n</html>"
 	}
 	return s, nil

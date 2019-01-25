@@ -53,3 +53,13 @@ label {
   font-size: 15px;
   margin-right: 20px;
 }
+
+select {
+  border-radius: 3px;
+  padding: 5px;
+  font-size: 20px;
+  color: #fff;
+  background-color: #4a90e2;
+  border: 1px solid #33639c;
+  margin-right: 1px;
+}

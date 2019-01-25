@@ -27,7 +27,7 @@
  *
  */
 
-package paste
+package main
 
 import (
 	"bufio"
@@ -40,20 +40,20 @@ import (
 	"strings"
 )
 
-// Store will save the paste and return its filename or an error
-func Store(title, date, content, destDir string) (string, error) {
+func store(title, date, content, destDir, lang string) (string, error) {
 
 	h := sha256.New()
 
 	h.Write([]byte(title))
 	h.Write([]byte(date))
+	h.Write([]byte(lang))
 	h.Write([]byte(content))
 
-	paste := fmt.Sprintf("# Title: %s\n# Date: %s\n%s", title, date, content)
+	paste := fmt.Sprintf("# Title: %s\n# Date: %s\n# Language: %s\n%s", title, date, lang, content)
 
 	pasteHash := fmt.Sprintf("%x", h.Sum(nil))
-	log.Printf("  `-- hash: %s\n", paste_hash)
-	pasteDir := dest_dir + "/"
+	log.Printf("  `-- hash: %s\n", pasteHash)
+	pasteDir := destDir + "/"
 
 	// Now we save the file
 	for i := 0; i < len(pasteHash)-16; i++ {
@@ -72,26 +72,22 @@ func Store(title, date, content, destDir string) (string, error) {
 	return "", errors.New("cannot store the paste...sorry")
 }
 
-// Retrieve will retrieve a certain paste (title, date and content or an error
-func Retrieve(URI string) (title, date, content string, err error) {
+func retrieve(URI string) (title string, date string, lang string, content string, err error) {
 
 	fCont, err := os.Open(URI)
 	defer fCont.Close()
 
-	if err == nil {
-		stuff := bufio.NewScanner(fCont)
-		// The first line contains the title
-		stuff.Scan()
-		title = strings.Trim(strings.Split(stuff.Text(), ":")[1], " ")
-		stuff.Scan()
-		date = strings.Trim(strings.Join(strings.Split(stuff.Text(), ":")[1:], ":"), " ")
-		for stuff.Scan() {
-			content += stuff.Text() + "\n"
-		}
-	} else {
-
-		return "", "", "", errors.New("cannot retrieve paste")
+	stuff := bufio.NewScanner(fCont)
+	// The first line contains the title
+	stuff.Scan()
+	title = strings.Trim(strings.Split(stuff.Text(), ":")[1], " ")
+	stuff.Scan()
+	date = strings.Trim(strings.Join(strings.Split(stuff.Text(), ":")[1:], ":"), " ")
+	stuff.Scan()
+	lang = strings.Trim(strings.Split(stuff.Text(), ":")[1], " ")
+	for stuff.Scan() {
+		content += stuff.Text() + "\n"
 	}
 
-	return title, date, content, nil
+	return
 }

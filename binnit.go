@@ -33,7 +33,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/dyne/binnit/paste"
 	"github.com/gorilla/mux"
 )
 
@@ -73,28 +72,29 @@ func handleGetPaste(w http.ResponseWriter, r *http.Request) {
 
 	origIP := r.RemoteAddr
 
-	log.Printf("Received GET from %s for  '%s'\n", origIP, origName)
+	log.Printf("Received GET from %s for  '%s'\n", origIP, pasteName)
 
 	// if the requested paste exists, we serve it...
 
-	title, date, content, err := paste.Retrieve(pasteName)
-
+	title, date, lang, content, err := retrieve(pasteName)
 	title = html.EscapeString(title)
 	date = html.EscapeString(date)
+	lang = html.EscapeString(lang)
 	content = html.EscapeString(content)
 
 	if err == nil {
-		s, err := preparePastePage(title, date, content, pConf.templDir, false)
+		s, err := preparePastePage(title, date, lang, content, pConf.templDir, false)
 		if err == nil {
 			fmt.Fprintf(w, "%s", s)
 			return
 		}
+		fmt.Fprintf(w, "Error was %v\n", err)
 		fmt.Fprintf(w, "Error recovering paste '%s'\n", origName)
 		return
 
 	}
 	// otherwise, we give say we didn't find it
-	fmt.Fprintf(w, "%s\n", err)
+	fmt.Fprintf(w, "%v\n", err)
 	return
 }
 
@@ -107,12 +107,13 @@ func handleGetRawPaste(w http.ResponseWriter, r *http.Request) {
 	origIP := r.RemoteAddr
 	log.Printf("Received GET from %s for  '%s'\n", origIP, origName)
 	// if the requested paste exists, we serve it...
-	title, date, content, err := paste.Retrieve(pasteName)
+	title, date, lang, content, err := retrieve(pasteName)
 	title = html.EscapeString(title)
 	date = html.EscapeString(date)
+	lang = html.EscapeString(lang)
 	content = html.EscapeString(content)
 	if err == nil {
-		s, err := preparePastePage(title, date, content, pConf.templDir, true)
+		s, err := preparePastePage(title, date, lang, content, pConf.templDir, true)
 		if err == nil {
 			fmt.Fprintf(w, "%s", s)
 			return
@@ -124,6 +125,7 @@ func handleGetRawPaste(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "%s\n", err)
 	return
 }
+
 func handlePutPaste(w http.ResponseWriter, r *http.Request) {
 
 	err1 := r.ParseForm()
@@ -142,11 +144,12 @@ func handlePutPaste(w http.ResponseWriter, r *http.Request) {
 		// get title, body, and time
 		title := reqBody.Get("title")
 		date := time.Now().String()
+		lang := reqBody.Get("lang")
 		content := reqBody.Get("paste")
 
 		content = content[0:min(len(content), int(pConf.maxSize))]
 
-		ID, err := paste.Store(title, date, content, pConf.pasteDir)
+		ID, err := store(title, date, content, pConf.pasteDir, lang)
 
 		log.Printf("   title: %s\npaste: %s\n", title, content)
 		log.Printf("   ID: %s; err: %v\n", ID, err)
@@ -198,7 +201,10 @@ func main() {
 
 	var r = mux.NewRouter()
 	r.StrictSlash(true)
+	// FIXME: Protect staticx from directory listing!
 	r.PathPrefix(st).Handler(http.StripPrefix(st, http.FileServer(http.Dir(pConf.staticDir))))
+	r.PathPrefix("/favicon.ico").Handler(http.NotFoundHandler()).Methods("GET")
+	r.PathPrefix("/robots.txt").Handler(http.NotFoundHandler()).Methods("GET")
 	r.HandleFunc("/", handleIndex).Methods("GET")
 	r.HandleFunc("/", handlePutPaste).Methods("POST")
 	r.HandleFunc("/{id}", handleGetPaste).Methods("GET")
