@@ -36,7 +36,17 @@ import (
 	"github.com/gorilla/mux"
 )
 
-var confFile = flag.String("c", "./binnit.cfg", "Configuration file for binnit")
+var (
+	//Version contains the git hashtag injected by make
+	Version = "N/A"
+	//BuildTime contains the build timestamp injected by make
+	BuildTime = "N/A"
+)
+
+var (
+	confFile = flag.String("c", "./binnit.cfg", "Configuration file for binnit")
+	version  = flag.Bool("v", false, "print binnit version and build time")
+)
 
 var pConf = config{
 	serverName: "localhost",
@@ -173,6 +183,10 @@ func handlePutPaste(w http.ResponseWriter, r *http.Request) {
 func main() {
 
 	flag.Parse()
+	if *version {
+		fmt.Println(Version, BuildTime)
+		os.Exit(0)
+	}
 
 	parseConfig(*confFile, &pConf)
 
