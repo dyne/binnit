@@ -31,3 +31,5 @@ _testmain.go
 /vendor
 /release
 /tmp
+/log
+/paste

@@ -71,6 +71,20 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, pConf.templDir+"/index.html")
 }
 
+func handleGetStatic(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	f := vars["file"]
+	if _, err := os.Stat("./" + pConf.staticDir + "/" + f); err == nil {
+		http.ServeFile(w, r, pConf.staticDir+"/"+f)
+	} else if os.IsNotExist(err) {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	} else {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+}
+
 func handleGetPaste(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
@@ -201,28 +215,29 @@ func main() {
 	log.SetPrefix("[binnit]: ")
 	log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds)
 
-	log.Println("Binnit version 0.1 -- Starting ")
+	log.Println("Binnit version " + Version + " -- Starting ")
 	log.Printf("  + Config file: %s\n", *confFile)
 	log.Printf("  + Serving pastes on: %s\n", pConf.serverName)
 	log.Printf("  + listening on: %s:%s\n", pConf.bindAddr, pConf.bindPort)
 	log.Printf("  + paste_dir: %s\n", pConf.pasteDir)
+	log.Printf("  + static_dir: %s\n", pConf.staticDir)
 	log.Printf("  + templ_dir: %s\n", pConf.templDir)
 	log.Printf("  + max_size: %d\n", pConf.maxSize)
 
 	// FIXME: create paste_dir if it does not exist
 
-	st := "/" + pConf.staticDir + "/"
-
 	var r = mux.NewRouter()
 	r.StrictSlash(true)
-	// FIXME: Protect staticx from directory listing!
-	r.PathPrefix(st).Handler(http.StripPrefix(st, http.FileServer(http.Dir(pConf.staticDir))))
+
 	r.PathPrefix("/favicon.ico").Handler(http.NotFoundHandler()).Methods("GET")
 	r.PathPrefix("/robots.txt").Handler(http.NotFoundHandler()).Methods("GET")
+
+	static := "/" + pConf.staticDir + "/{file}"
 	r.HandleFunc("/", handleIndex).Methods("GET")
 	r.HandleFunc("/", handlePutPaste).Methods("POST")
 	r.HandleFunc("/{id}", handleGetPaste).Methods("GET")
 	r.HandleFunc("/{id}/raw", handleGetRawPaste).Methods("GET")
+	r.HandleFunc(static, handleGetStatic).Methods("GET")
 
 	log.Fatal(http.ListenAndServe(pConf.bindAddr+":"+pConf.bindPort, r))
 }
