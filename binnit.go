@@ -34,6 +34,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/karasz/binnit/fs"
 )
 
 var (
@@ -86,7 +87,7 @@ func handleGetStatic(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleGetPaste(w http.ResponseWriter, r *http.Request) {
-
+	var paste ReadWriter = fs.Paste{}
 	vars := mux.Vars(r)
 
 	var pasteName, origName string
@@ -100,7 +101,7 @@ func handleGetPaste(w http.ResponseWriter, r *http.Request) {
 
 	// if the requested paste exists, we serve it...
 
-	title, date, lang, content, err := retrieve(pasteName)
+	title, date, lang, content, err := paste.ReadPaste(pasteName)
 	title = html.EscapeString(title)
 	date = html.EscapeString(date)
 	lang = html.EscapeString(lang)
@@ -123,7 +124,7 @@ func handleGetPaste(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleGetRawPaste(w http.ResponseWriter, r *http.Request) {
-
+	var paste ReadWriter = fs.Paste{}
 	vars := mux.Vars(r)
 	var pasteName, origName string
 	origName = vars["id"]
@@ -131,7 +132,7 @@ func handleGetRawPaste(w http.ResponseWriter, r *http.Request) {
 	origIP := r.RemoteAddr
 	log.Printf("Received GET from %s for  '%s'\n", origIP, origName)
 	// if the requested paste exists, we serve it...
-	title, date, lang, content, err := retrieve(pasteName)
+	title, date, lang, content, err := paste.ReadPaste(pasteName)
 	title = html.EscapeString(title)
 	date = html.EscapeString(date)
 	lang = html.EscapeString(lang)
@@ -151,7 +152,7 @@ func handleGetRawPaste(w http.ResponseWriter, r *http.Request) {
 }
 
 func handlePutPaste(w http.ResponseWriter, r *http.Request) {
-
+	var paste ReadWriter = fs.Paste{}
 	err1 := r.ParseForm()
 	err2 := r.ParseMultipartForm(int64(2 * pConf.maxSize))
 
@@ -173,15 +174,20 @@ func handlePutPaste(w http.ResponseWriter, r *http.Request) {
 
 		content = content[0:min(len(content), int(pConf.maxSize))]
 
-		ID, err := store(title, date, content, pConf.pasteDir, lang)
+		ID, err := paste.WritePaste(title, date, lang, content, pConf.pasteDir)
 
-		log.Printf("   title: %s\npaste: %s\n", title, content)
 		log.Printf("   ID: %s; err: %v\n", ID, err)
 
 		if err == nil {
 			hostname := pConf.serverName
+			port := pConf.bindPort
 			if show := reqBody.Get("show"); show != "1" {
 				fmt.Fprintf(w, "http://%s/%s\n", hostname, ID)
+				return
+			}
+			if port != string(80) && port != string(443) {
+				fmt.Fprintf(w, "<html><body>Link: <a href='http://%s:%s/%s'>http://%s:%s/%s</a></body></html>",
+					hostname, port, ID, hostname, port, ID)
 				return
 			}
 			fmt.Fprintf(w, "<html><body>Link: <a href='http://%s/%s'>http://%s/%s</a></body></html>",
