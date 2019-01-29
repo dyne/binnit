@@ -187,7 +187,7 @@ func handlePutPaste(w http.ResponseWriter, r *http.Request) {
 
 		ID, err := storage.Put(title, date, lang, content, pConf.pasteDir)
 
-		logerr.Printf("   ID: %s; err: %v\n", ID, err)
+		logger.Printf("   ID: %s; err: %v\n", ID, err)
 
 		if err == nil {
 			hostname := pConf.serverName

@@ -107,6 +107,7 @@ func (p Paste) makePasteName(title, date, lang, content, destDir string) (string
 			if _, errC := os.Create(pasteDir + pasteName); errC != nil {
 				return "", errC
 			}
+			break
 		}
 	}
 	return pasteName, nil
