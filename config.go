@@ -45,6 +45,7 @@ type config struct {
 	staticDir  string
 	maxSize    uint16
 	logFile    string
+	storage    string
 }
 
 func (c config) String() string {
@@ -56,6 +57,7 @@ func (c config) String() string {
 	s += "paste_dir: " + c.pasteDir + "\n"
 	s += "templ_dir: " + c.templDir + "\n"
 	s += "static_dir: " + c.staticDir + "\n"
+	s += "storage: " + c.storage + "\n"
 	s += "max_size: " + string(c.maxSize) + "\n"
 	s += "log_file: " + c.logFile + "\n"
 
@@ -96,6 +98,8 @@ func parseConfig(fname string, c *config) error {
 						c.templDir = strings.Trim(fields[1], " \t\"")
 					case "static_dir":
 						c.staticDir = strings.Trim(fields[1], " \t\"")
+					case "storage":
+						c.storage = strings.Trim(fields[1], " \t\"")
 					case "log_file":
 						c.logFile = strings.Trim(fields[1], " \t\"")
 					case "max_size":

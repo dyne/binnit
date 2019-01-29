@@ -34,7 +34,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/karasz/binnit/fs"
+	"github.com/karasz/binnit/storage/fs"
 )
 
 var (
@@ -47,6 +47,8 @@ var (
 var (
 	confFile = flag.String("c", "./binnit.cfg", "Configuration file for binnit")
 	version  = flag.Bool("v", false, "print binnit version and build time")
+	logger   *log.Logger
+	storage  StorageBackend
 )
 
 var pConf = config{
@@ -55,8 +57,20 @@ var pConf = config{
 	bindPort:   "8000",
 	pasteDir:   "./pastes",
 	templDir:   "./tmpl",
+	staticDir:  "./static",
+	storage:    "fs",
 	maxSize:    4096,
 	logFile:    "./binnit.log",
+}
+
+func setLogger() *log.Logger {
+	f, err := os.OpenFile(pConf.logFile, os.O_APPEND|os.O_CREATE|os.O_RDWR, 0600)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error opening log file: %s. Exiting\n", pConf.logFile)
+		os.Exit(1)
+	}
+	logger = log.New(io.Writer(f), "[binnit:]: ", log.Ldate|log.Ltime|log.Lmicroseconds)
+	return logger
 }
 
 func min(a, b int) int {
@@ -87,7 +101,6 @@ func handleGetStatic(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleGetPaste(w http.ResponseWriter, r *http.Request) {
-	var paste ReadWriter = fs.Paste{}
 	vars := mux.Vars(r)
 
 	var pasteName, origName string
@@ -97,11 +110,11 @@ func handleGetPaste(w http.ResponseWriter, r *http.Request) {
 
 	origIP := r.RemoteAddr
 
-	log.Printf("Received GET from %s for  '%s'\n", origIP, pasteName)
+	logger.Printf("Received GET from %s for  '%s'\n", origIP, pasteName)
 
 	// if the requested paste exists, we serve it...
 
-	title, date, lang, content, err := paste.ReadPaste(pasteName)
+	title, date, lang, content, err := storage.Get(pasteName)
 	title = html.EscapeString(title)
 	date = html.EscapeString(date)
 	lang = html.EscapeString(lang)
@@ -124,15 +137,14 @@ func handleGetPaste(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleGetRawPaste(w http.ResponseWriter, r *http.Request) {
-	var paste ReadWriter = fs.Paste{}
 	vars := mux.Vars(r)
 	var pasteName, origName string
 	origName = vars["id"]
 	pasteName = pConf.pasteDir + "/" + origName
 	origIP := r.RemoteAddr
-	log.Printf("Received GET from %s for  '%s'\n", origIP, origName)
+	logger.Printf("Received GET from %s for  '%s'\n", origIP, origName)
 	// if the requested paste exists, we serve it...
-	title, date, lang, content, err := paste.ReadPaste(pasteName)
+	title, date, lang, content, err := storage.Get(pasteName)
 	title = html.EscapeString(title)
 	date = html.EscapeString(date)
 	lang = html.EscapeString(lang)
@@ -152,7 +164,6 @@ func handleGetRawPaste(w http.ResponseWriter, r *http.Request) {
 }
 
 func handlePutPaste(w http.ResponseWriter, r *http.Request) {
-	var paste ReadWriter = fs.Paste{}
 	err1 := r.ParseForm()
 	err2 := r.ParseMultipartForm(int64(2 * pConf.maxSize))
 
@@ -164,7 +175,7 @@ func handlePutPaste(w http.ResponseWriter, r *http.Request) {
 
 		origIP := r.RemoteAddr
 
-		log.Printf("Received new POST from %s\n", origIP)
+		logger.Printf("Received new POST from %s\n", origIP)
 
 		// get title, body, and time
 		title := reqBody.Get("title")
@@ -174,9 +185,9 @@ func handlePutPaste(w http.ResponseWriter, r *http.Request) {
 
 		content = content[0:min(len(content), int(pConf.maxSize))]
 
-		ID, err := paste.WritePaste(title, date, lang, content, pConf.pasteDir)
+		ID, err := storage.Put(title, date, lang, content, pConf.pasteDir)
 
-		log.Printf("   ID: %s; err: %v\n", ID, err)
+		logerr.Printf("   ID: %s; err: %v\n", ID, err)
 
 		if err == nil {
 			hostname := pConf.serverName
@@ -200,35 +211,44 @@ func handlePutPaste(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func loadStorage(name, options string) StorageBackend {
+	var st StorageBackend
+	var err error
+	switch name {
+	case "fs":
+		st, err = fs.NewStorage(options)
+	}
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
+	return st
+
+}
+
+func init() {
+	flag.Parse()
+	parseConfig(*confFile, &pConf)
+	setLogger()
+	storage = loadStorage(pConf.storage, pConf.pasteDir)
+
+	logger.Println("Binnit version " + Version + " -- Starting ")
+	logger.Printf("  + Config file: %s\n", *confFile)
+	logger.Printf("  + Serving pastes on: %s\n", pConf.serverName)
+	logger.Printf("  + listening on: %s:%s\n", pConf.bindAddr, pConf.bindPort)
+	logger.Printf("  + paste_dir: %s\n", pConf.pasteDir)
+	logger.Printf("  + static_dir: %s\n", pConf.staticDir)
+	logger.Printf("  + storage: %s\n", pConf.storage)
+	logger.Printf("  + templ_dir: %s\n", pConf.templDir)
+	logger.Printf("  + max_size: %d\n", pConf.maxSize)
+}
+
 func main() {
 
-	flag.Parse()
 	if *version {
 		fmt.Println(Version, BuildTime)
 		os.Exit(0)
 	}
-
-	parseConfig(*confFile, &pConf)
-
-	f, err := os.OpenFile(pConf.logFile, os.O_APPEND|os.O_CREATE|os.O_RDWR, 0600)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error opening log file: %s. Exiting\n", pConf.logFile)
-		os.Exit(1)
-	}
-	defer f.Close()
-
-	log.SetOutput(io.Writer(f))
-	log.SetPrefix("[binnit]: ")
-	log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds)
-
-	log.Println("Binnit version " + Version + " -- Starting ")
-	log.Printf("  + Config file: %s\n", *confFile)
-	log.Printf("  + Serving pastes on: %s\n", pConf.serverName)
-	log.Printf("  + listening on: %s:%s\n", pConf.bindAddr, pConf.bindPort)
-	log.Printf("  + paste_dir: %s\n", pConf.pasteDir)
-	log.Printf("  + static_dir: %s\n", pConf.staticDir)
-	log.Printf("  + templ_dir: %s\n", pConf.templDir)
-	log.Printf("  + max_size: %d\n", pConf.maxSize)
 
 	// FIXME: create paste_dir if it does not exist
 
@@ -245,5 +265,5 @@ func main() {
 	r.HandleFunc("/{id}/raw", handleGetRawPaste).Methods("GET")
 	r.HandleFunc(static, handleGetStatic).Methods("GET")
 
-	log.Fatal(http.ListenAndServe(pConf.bindAddr+":"+pConf.bindPort, r))
+	logger.Fatal(http.ListenAndServe(pConf.bindAddr+":"+pConf.bindPort, r))
 }

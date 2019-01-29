@@ -35,14 +35,26 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"time"
 )
 
 //Paste is a struct containing a paste
 type Paste struct {
+	title   string
+	date    time.Time
+	lang    string
+	content *os.File
+	dir     string
 }
 
-//WritePaste will read a paste from the file system
-func (p Paste) WritePaste(title, date, lang, content, destDir string) (string, error) {
+//NewStorage creates a file system storage
+func NewStorage(dirname string) (*Paste, error) {
+	me := Paste{}
+	return &me, nil
+}
+
+//Put will write a paste to the file system
+func (p Paste) Put(title, date, lang, content, destDir string) (string, error) {
 
 	safename, errN := p.makePasteName(title, date, lang, content, destDir)
 	if errN != nil {
@@ -100,10 +112,16 @@ func (p Paste) makePasteName(title, date, lang, content, destDir string) (string
 	return pasteName, nil
 }
 
-//ReadPaste will write a paste to the filesystem
-func (p Paste) ReadPaste(URI string) (title string, date string, lang string, content string, err error) {
+//Get will get a paste from the filesystem
+func (p Paste) Get(URI string) (title string, date string, lang string, content string, err error) {
 	title, date, lang, err = p.getPasteMetadata(URI)
 	bc, err := ioutil.ReadFile(URI)
 	content = string(bc)
 	return
+}
+
+// Flush the storage
+func (p Paste) Flush() error {
+	fmt.Println("Flush called")
+	return nil
 }
