@@ -27,6 +27,7 @@ import (
 	"flag"
 	"fmt"
 	"html"
+	"html/template"
 	"io"
 	"log"
 	"net/http"
@@ -61,6 +62,14 @@ var pConf = config{
 	storage:    "fs",
 	maxSize:    4096,
 	logFile:    "./binnit.log",
+}
+
+type paste struct {
+	Title   string
+	Lang    string
+	Date    string
+	Content []byte
+	Raw     bool
 }
 
 func setLogger() *log.Logger {
@@ -118,20 +127,14 @@ func handleGetPaste(w http.ResponseWriter, r *http.Request) {
 	title = html.EscapeString(title)
 	date = html.EscapeString(date)
 	lang = html.EscapeString(lang)
-	content = html.EscapeString(content)
-
 	if err == nil {
-		s, err := preparePastePage(title, date, lang, content, pConf.templDir, false)
-		if err == nil {
-			fmt.Fprintf(w, "%s", s)
-			return
+		p := paste{Title: title, Lang: lang, Date: date, Content: content, Raw: false}
+		t := template.Must(template.ParseFiles(pConf.templDir + "/paste.tpl"))
+		errT := t.Execute(w, p)
+		if errT != nil {
+			panic(errT)
 		}
-		fmt.Fprintf(w, "Error was %v\n", err)
-		fmt.Fprintf(w, "Error recovering paste '%s'\n", origName)
-		return
-
-	}
-	// otherwise, we give say we didn't find it
+	} // otherwise, we give say we didn't find it
 	fmt.Fprintf(w, "%v\n", err)
 	return
 }
@@ -148,18 +151,16 @@ func handleGetRawPaste(w http.ResponseWriter, r *http.Request) {
 	title = html.EscapeString(title)
 	date = html.EscapeString(date)
 	lang = html.EscapeString(lang)
-	content = html.EscapeString(content)
 	if err == nil {
-		s, err := preparePastePage(title, date, lang, content, pConf.templDir, true)
-		if err == nil {
-			fmt.Fprintf(w, "%s", s)
-			return
+		p := paste{Title: title, Lang: lang, Date: date, Content: content, Raw: true}
+		t := template.Must(template.ParseFiles(pConf.templDir + "/paste.tpl"))
+		errT := t.Execute(w, p)
+		if errT != nil {
+			panic(errT)
 		}
-		fmt.Fprintf(w, "Error recovering paste '%s'\n", origName)
-		return
 	}
 	// otherwise, we give say we didn't find it
-	fmt.Fprintf(w, "%s\n", err)
+	fmt.Fprintf(w, "%v\n", err)
 	return
 }
 
@@ -181,7 +182,7 @@ func handlePutPaste(w http.ResponseWriter, r *http.Request) {
 		title := reqBody.Get("title")
 		date := time.Now().String()
 		lang := reqBody.Get("lang")
-		content := reqBody.Get("paste")
+		content := []byte(reqBody.Get("paste"))
 
 		content = content[0:min(len(content), int(pConf.maxSize))]
 

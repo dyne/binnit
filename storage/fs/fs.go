@@ -43,7 +43,7 @@ type Paste struct {
 	title   string
 	date    time.Time
 	lang    string
-	content *os.File
+	content []byte
 	dir     string
 }
 
@@ -54,7 +54,7 @@ func NewStorage(dirname string) (*Paste, error) {
 }
 
 //Put will write a paste to the file system
-func (p Paste) Put(title, date, lang, content, destDir string) (string, error) {
+func (p Paste) Put(title, date, lang string, content []byte, destDir string) (string, error) {
 
 	safename, errN := p.makePasteName(title, date, lang, content, destDir)
 	if errN != nil {
@@ -66,7 +66,7 @@ func (p Paste) Put(title, date, lang, content, destDir string) (string, error) {
 		return "", errM
 	}
 
-	if errC := ioutil.WriteFile(destDir+"/"+safename, []byte(content), 0644); errC != nil {
+	if errC := ioutil.WriteFile(destDir+"/"+safename, content, 0644); errC != nil {
 		return "", errC
 	}
 
@@ -91,13 +91,13 @@ func (p Paste) getPasteMetadata(URI string) (title string, date string, lang str
 	return
 }
 
-func (p Paste) makePasteName(title, date, lang, content, destDir string) (string, error) {
+func (p Paste) makePasteName(title, date, lang string, content []byte, destDir string) (string, error) {
 	var pasteName string
 	h := sha256.New()
 	h.Write([]byte(title))
 	h.Write([]byte(date))
 	h.Write([]byte(lang))
-	h.Write([]byte(content))
+	h.Write(content)
 	pasteHash := fmt.Sprintf("%x", h.Sum(nil))
 	pasteDir := destDir + "/"
 
@@ -114,10 +114,9 @@ func (p Paste) makePasteName(title, date, lang, content, destDir string) (string
 }
 
 //Get will get a paste from the filesystem
-func (p Paste) Get(URI string) (title string, date string, lang string, content string, err error) {
+func (p Paste) Get(URI string) (title string, date string, lang string, content []byte, err error) {
 	title, date, lang, err = p.getPasteMetadata(URI)
-	bc, err := ioutil.ReadFile(URI)
-	content = string(bc)
+	content, err = ioutil.ReadFile(URI)
 	return
 }
 
