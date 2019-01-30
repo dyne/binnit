@@ -20,14 +20,11 @@
       Date: {{.Date}}
     </div>
 
-<pre>
-<code class="language-{{.Lang}} line-numbers">
+<pre class="language-{{.Lang}} line-numbers"><code>
 {{ else }}
-<pre>
-<code>
+<pre><code>
 {{end}}
       {{printf "%s" .Content}}
-</code>
-</pre>
+</code></pre>
   </body>
 </html>
