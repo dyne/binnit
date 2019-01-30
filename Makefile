@@ -27,7 +27,7 @@ release: build
 		rm -rf ./tmp/binnit ; \
 		mkdir -p ./tmp/binnit ; \
 		cp -a ./bin/binnit-linux-$$arch ./tmp/binnit/binnit ; \
-		cp -a ./html ./tmp/binnit ; \
+		cp -a ./tpl ./tmp/binnit ; \
 		cp -a ./static ./tmp/binnit ; \
 		mkdir -p ./tmp/binnit/paste ; \
 		mkdir -p ./tmp/binnit/log ; \

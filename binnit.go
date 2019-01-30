@@ -55,13 +55,13 @@ var (
 var pConf = config{
 	serverName: "localhost",
 	bindAddr:   "0.0.0.0",
-	bindPort:   "8000",
-	pasteDir:   "./pastes",
-	templDir:   "./tmpl",
+	bindPort:   "8080",
+	pasteDir:   "./paste",
+	templDir:   "./tpl",
 	staticDir:  "./static",
 	storage:    "fs",
 	maxSize:    4096,
-	logFile:    "./binnit.log",
+	logFile:    "./log/binnit.log",
 }
 
 type paste struct {
